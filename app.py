@@ -2,93 +2,85 @@ import streamlit as st
 import random
 import time
 from gtts import gTTS
-import base64
 from io import BytesIO
 
 st.set_page_config(layout="centered")
 
-CONSOANTES = list("BDFGLMNPRSTV")
+CONSOANTES = list("BPM LFTDNS".replace(" ",""))
 VOGAIS = list("AEIOU")
 
-# banco de comidas por sílaba
 COMIDAS = {
-    "BA":"🍌 Banana","BE":"🧁 Bolo","BI":"🥤 Bebida","BO":"🍩 Bolacha","BU":"🍔 Burger",
-    "MA":"🍎 Maçã","ME":"🍯 Mel","MI":"🥛 Milkshake","MO":"🍫 Mousse","MU":"🧁 Muffin",
-    "PA":"🍞 Pão","PE":"🍐 Pera","PI":"🍕 Pizza","PO":"🍿 Pipoca","PU":"🥞 Panqueca",
-    "LA":"🥗 Lasanha","LE":"🍋 Limão","LI":"🍭 Lollipop","LO":"🍪 Lollipop","LU":"🍝 Macarrão",
+"BA":"🍌 BANANA","BE":"🥗 BETERRABA","BI":"🍪 BISCOITO","BO":"🎂 BOLO","BU":"🌯 BURRITO",
+"PA":"🍞 PÃO","PE":"🍐 PERA","PI":"🍕 PIZZA","PO":"🍿 PIPOCA","PU":"🥔 PURÊ",
+"MA":"🍎 MAÇÃ","ME":"🍯 MEL","MI":"🌽 MILHO","MO":"🍓 MORANGO","MU":"🧁 MUFFIN",
+"LA":"🍝 LASANHA","LE":"🥛 LEITE","LI":"🍋 LIMÃO","LO":"🍖 LOMBO","LU":"🦑 LULA",
+"FA":"🍛 FAROFA","FE":"🫘 FEIJÃO","FI":"🍈 FIGO","FO":"🫓 FOCACCIA","FU":"🍲 CALDO"
 }
 
-def falar(texto):
-    tts = gTTS(text=texto, lang="pt-br")
+def falar(txt):
+    tts = gTTS(text=txt, lang="pt-br")
     mp3 = BytesIO()
     tts.write_to_fp(mp3)
-    st.audio(mp3.getvalue(), format="audio/mp3", autoplay=True)
+    st.audio(mp3.getvalue(), autoplay=True)
 
-# estado
 if "etapa" not in st.session_state:
     st.session_state.etapa = 1
     st.session_state.pontos = 0
 
-def nova_rodada():
-    st.session_state.consoante = random.choice(CONSOANTES)
-    st.session_state.vogal = random.choice(VOGAIS)
+def nova():
+    st.session_state.c = random.choice(CONSOANTES)
+    st.session_state.v = random.choice(VOGAIS)
     st.session_state.etapa = 1
 
-if "consoante" not in st.session_state:
-    nova_rodada()
+if "c" not in st.session_state:
+    nova()
 
-# estilo botões gigantes
+# 🔥 BOTÕES MUITO GRANDES
 st.markdown("""
 <style>
 div.stButton > button {
-    height:150px;
-    width:100%;
-    font-size:70px;
-    border-radius:25px;
+height:220px;
+font-size:120px;
+border-radius:40px;
 }
-.big-text {font-size:60px;text-align:center;}
-.center {text-align:center;}
-.food {font-size:80px;text-align:center;}
+.big {font-size:70px;text-align:center;}
+.food {font-size:110px;text-align:center;}
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🍎 Monte a Sí­laba da Comida")
-
-st.markdown(f"<h2 class='center'>⭐ Pontos: {st.session_state.pontos}</h2>", unsafe_allow_html=True)
-st.write("")
+st.title("🍎 MONTE A SÍLABA")
+st.write(f"## ⭐ PONTOS: {st.session_state.pontos}")
 
 # ETAPA 1
 if st.session_state.etapa == 1:
-    st.markdown("<div class='big-text'>1️⃣ Toque na CONSOANTE</div>", unsafe_allow_html=True)
-    if st.button(st.session_state.consoante):
-        falar(st.session_state.consoante)
+    st.markdown("<div class='big'>1️⃣ TOQUE NA CONSOANTE</div>", unsafe_allow_html=True)
+    if st.button(st.session_state.c):
+        falar(st.session_state.c)
         st.session_state.etapa = 2
         st.rerun()
 
 # ETAPA 2
 elif st.session_state.etapa == 2:
-    st.markdown("<div class='big-text'>2️⃣ Agora toque na VOGAL</div>", unsafe_allow_html=True)
-    if st.button(st.session_state.vogal):
-        falar(st.session_state.vogal)
+    st.markdown("<div class='big'>2️⃣ TOQUE NA VOGAL</div>", unsafe_allow_html=True)
+    if st.button(st.session_state.v):
+        falar(st.session_state.v)
         st.session_state.etapa = 3
         st.session_state.pontos += 1
         st.rerun()
 
-# ETAPA 3 — festa + comida 🍔
+# FESTA 🎉
 elif st.session_state.etapa == 3:
-    silaba = st.session_state.consoante + st.session_state.vogal
-    comida = COMIDAS.get(silaba, "🍓 Comidinha")
+    silaba = st.session_state.c + st.session_state.v
+    comida = COMIDAS.get(silaba, "🍓 COMIDA")
 
     st.balloons()
-    st.markdown(f"<div class='big-text'>🎉 {silaba} 🎉</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='big'>🎉 {silaba} 🎉</div>", unsafe_allow_html=True)
     st.markdown(f"<div class='food'>{comida}</div>", unsafe_allow_html=True)
-
     falar(silaba)
 
-    st.write("")
-    if st.button("🔊 Ouvir novamente"):
+    if st.button("🔊 OUVIR DE NOVO"):
         falar(silaba)
 
-    if st.button("🍽️ Jogar novamente"):
-        nova_rodada()
+    if st.button("🍽️ NOVA RODADA"):
+        nova()
         st.rerun()
