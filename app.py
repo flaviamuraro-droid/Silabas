@@ -1,61 +1,94 @@
 import streamlit as st
 import random
+import time
+from gtts import gTTS
+import base64
+from io import BytesIO
 
-CONSOANTES = list("BCDFGLMNPRSTVZ")
+st.set_page_config(layout="centered")
+
+CONSOANTES = list("BDFGLMNPRSTV")
 VOGAIS = list("AEIOU")
 
-# Estado do jogo (memória entre cliques)
-if "fase" not in st.session_state:
-    st.session_state.fase = "escolher"
+# banco de comidas por sílaba
+COMIDAS = {
+    "BA":"🍌 Banana","BE":"🧁 Bolo","BI":"🥤 Bebida","BO":"🍩 Bolacha","BU":"🍔 Burger",
+    "MA":"🍎 Maçã","ME":"🍯 Mel","MI":"🥛 Milkshake","MO":"🍫 Mousse","MU":"🧁 Muffin",
+    "PA":"🍞 Pão","PE":"🍐 Pera","PI":"🍕 Pizza","PO":"🍿 Pipoca","PU":"🥞 Panqueca",
+    "LA":"🥗 Lasanha","LE":"🍋 Limão","LI":"🍭 Lollipop","LO":"🍪 Lollipop","LU":"🍝 Macarrão",
+}
+
+def falar(texto):
+    tts = gTTS(text=texto, lang="pt-br")
+    mp3 = BytesIO()
+    tts.write_to_fp(mp3)
+    st.audio(mp3.getvalue(), format="audio/mp3", autoplay=True)
+
+# estado
+if "etapa" not in st.session_state:
+    st.session_state.etapa = 1
     st.session_state.pontos = 0
-    st.session_state.ordem = []
-    st.session_state.msg = "Toque primeiro na CONSOANTE!"
 
 def nova_rodada():
     st.session_state.consoante = random.choice(CONSOANTES)
     st.session_state.vogal = random.choice(VOGAIS)
-    st.session_state.ordem = []
-    st.session_state.fase = "escolher"
-    st.session_state.msg = "Toque primeiro na CONSOANTE!"
+    st.session_state.etapa = 1
 
 if "consoante" not in st.session_state:
     nova_rodada()
 
-st.title("🧩 Jogo das Sílabas")
+# estilo botões gigantes
+st.markdown("""
+<style>
+div.stButton > button {
+    height:150px;
+    width:100%;
+    font-size:70px;
+    border-radius:25px;
+}
+.big-text {font-size:60px;text-align:center;}
+.center {text-align:center;}
+.food {font-size:80px;text-align:center;}
+</style>
+""", unsafe_allow_html=True)
 
-st.subheader("Ordem: CONSOANTE → VOGAL")
+st.title("🍎 Monte a Sí­laba da Comida")
 
-col1, col2 = st.columns(2)
+st.markdown(f"<h2 class='center'>⭐ Pontos: {st.session_state.pontos}</h2>", unsafe_allow_html=True)
+st.write("")
 
-def clicar(tipo):
-    if st.session_state.fase != "escolher":
-        return
-    
-    st.session_state.ordem.append(tipo)
-    
-    if len(st.session_state.ordem) == 1:
-        if tipo == "consoante":
-            st.session_state.msg = "Ótimo! Agora a VOGAL!"
-        else:
-            st.session_state.msg = "Ops! Primeiro a CONSOANTE!"
-    
-    elif len(st.session_state.ordem) == 2:
-        if st.session_state.ordem == ["consoante", "vogal"]:
-            st.session_state.msg = f"🎉 Muito bem! {st.session_state.consoante + st.session_state.vogal}"
-            st.session_state.pontos += 1
-        else:
-            st.session_state.msg = "Quase! A ordem é Consoante + Vogal"
-        st.session_state.fase = "fim"
+# ETAPA 1
+if st.session_state.etapa == 1:
+    st.markdown("<div class='big-text'>1️⃣ Toque na CONSOANTE</div>", unsafe_allow_html=True)
+    if st.button(st.session_state.consoante):
+        falar(st.session_state.consoante)
+        st.session_state.etapa = 2
+        st.rerun()
 
-with col1:
-    st.button(st.session_state.consoante, on_click=clicar, args=("consoante",))
+# ETAPA 2
+elif st.session_state.etapa == 2:
+    st.markdown("<div class='big-text'>2️⃣ Agora toque na VOGAL</div>", unsafe_allow_html=True)
+    if st.button(st.session_state.vogal):
+        falar(st.session_state.vogal)
+        st.session_state.etapa = 3
+        st.session_state.pontos += 1
+        st.rerun()
 
-with col2:
-    st.button(st.session_state.vogal, on_click=clicar, args=("vogal",))
+# ETAPA 3 — festa + comida 🍔
+elif st.session_state.etapa == 3:
+    silaba = st.session_state.consoante + st.session_state.vogal
+    comida = COMIDAS.get(silaba, "🍓 Comidinha")
 
-st.write("###", st.session_state.msg)
-st.write("⭐ Pontos:", st.session_state.pontos)
+    st.balloons()
+    st.markdown(f"<div class='big-text'>🎉 {silaba} 🎉</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='food'>{comida}</div>", unsafe_allow_html=True)
 
-if st.session_state.fase == "fim":
-    if st.button("Nova rodada"):
+    falar(silaba)
+
+    st.write("")
+    if st.button("🔊 Ouvir novamente"):
+        falar(silaba)
+
+    if st.button("🍽️ Jogar novamente"):
         nova_rodada()
+        st.rerun()
