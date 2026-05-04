@@ -6,59 +6,44 @@
 
 <style>
 body{
-  font-family: Arial, sans-serif;
-  text-align:center;
-  background:#f0f8ff;
+    font-family: Arial;
+    text-align:center;
+    background:#FFF8DC;
 }
 
 h1{
-  font-size:40px;
+    font-size:55px;
 }
 
 #instrucao{
-  font-size:38px;
-  font-weight:bold;
-  margin:20px;
-  color:#ff6600;
+    font-size:45px;
+    font-weight:bold;
+    margin:30px;
 }
 
-.grade{
-  display:grid;
-  grid-template-columns: repeat(5, 120px);
-  justify-content:center;
-  gap:20px;
-  margin-top:20px;
-}
-
-.caixa{
-  width:120px;
-  height:120px;
-  border-radius:20px;
-  background:#ffffff;
-  border:4px solid #333;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:60px;   /* AQUI fica o tamanho das letras */
-  font-weight:bold;
-  cursor:pointer;
+.botao{
+    font-size:120px;
+    width:220px;
+    height:220px;
+    margin:20px;
+    border-radius:30px;
 }
 
 #resultado{
-  font-size:70px;
-  margin-top:20px;
+    font-size:120px;
+    margin-top:30px;
+    font-weight:bold;
 }
 
 #palavra{
-  font-size:35px;
-  margin-top:10px;
+    font-size:60px;
+    margin:20px;
 }
 
-#btnProxima{
-  margin-top:20px;
-  font-size:28px;
-  padding:10px 25px;
-  display:none;
+#proximo{
+    font-size:40px;
+    padding:20px;
+    display:none;
 }
 </style>
 </head>
@@ -66,20 +51,19 @@ h1{
 <body>
 
 <h1>VAMOS FORMAR SÍLABAS!</h1>
-<div id="instrucao">CLIQUE NA CONSOANTE!</div>
+<div id="instrucao">CLIQUE NA CONSOANTE</div>
 
-<div class="grade" id="consoantes"></div>
-<hr>
-<div class="grade" id="vogais"></div>
+<button id="btn1" class="botao"></button>
+<button id="btn2" class="botao"></button>
 
 <div id="resultado"></div>
 <div id="palavra"></div>
-<button id="btnProxima" onclick="proxima()">PRÓXIMA SÍLABA</button>
+
+<button id="proximo" onclick="novaRodada()">PRÓXIMA SÍLABA</button>
 
 <script>
-const vogais=["A","E","I","O","U"]
-
-const silabas=[
+// LISTA DE SÍLABAS + PALAVRAS
+const silabas = [
 ["BA","BANANA"],["BE","BETERRABA"],["BI","BISCOITO"],["BO","BOLO"],["BU","BURRITO"],
 ["CA","CAMARÃO"],["CE","CEBOLA"],["CO","COGUMELO"],["CU","CUSCUZ"],
 ["DA","DAMASCO"],["DO","DOCE"],
@@ -92,90 +76,84 @@ const silabas=[
 ["RA","RABANETE"],["RI","RICOTA"],["RO","ROMÃ"],
 ["SA","SALADA"],["SO","SOPA"],
 ["TA","TABULE"]
-]
+];
 
-let atual=0
-let etapa="consoante"
-let consoanteEscolhida=""
+let consoante;
+let vogal;
+let silabaAtual;
+let palavraAtual;
+let clicouConsoante=false;
 
 function falar(texto){
-  let msg=new SpeechSynthesisUtterance(texto)
-  msg.lang="pt-BR"
-  msg.rate=0.8
-  speechSynthesis.speak(msg)
+    let fala=new SpeechSynthesisUtterance(texto);
+    fala.lang="pt-BR";
+    speechSynthesis.speak(fala);
 }
 
-function criarCaixas(){
-  const conDiv=document.getElementById("consoantes")
-  const vogDiv=document.getElementById("vogais")
+function novaRodada(){
+    document.getElementById("resultado").innerHTML="";
+    document.getElementById("palavra").innerHTML="";
+    document.getElementById("proximo").style.display="none";
+    document.getElementById("instrucao").innerHTML="CLIQUE NA CONSOANTE";
 
-  const consoantes=[...new Set(silabas.map(s=>s[0][0]))]
+    clicouConsoante=false;
 
-  consoantes.forEach(c=>{
-    let d=document.createElement("div")
-    d.className="caixa"
-    d.innerText=c
-    d.onclick=()=>clicarLetra(c)
-    conDiv.appendChild(d)
-  })
+    // SORTEIA UMA SÍLABA
+    let sorteio = silabas[Math.floor(Math.random()*silabas.length)];
+    silabaAtual = sorteio[0];
+    palavraAtual = sorteio[1];
 
-  vogais.forEach(v=>{
-    let d=document.createElement("div")
-    d.className="caixa"
-    d.innerText=v
-    d.onclick=()=>clicarLetra(v)
-    vogDiv.appendChild(d)
-  })
-}
+    consoante = silabaAtual[0];
+    vogal = silabaAtual[1];
 
-function clicarLetra(letra){
-
-  if(etapa=="consoante"){
-    if(vogais.includes(letra)){
-      falar("Vamos tentar novamente. Clique primeiro na consoante")
-      return
+    // EMBARALHA POSIÇÃO DOS BOTÕES
+    if(Math.random() < 0.5){
+        btn1.innerHTML = consoante;
+        btn2.innerHTML = vogal;
+    } else {
+        btn1.innerHTML = vogal;
+        btn2.innerHTML = consoante;
     }
-    consoanteEscolhida=letra
-    etapa="vogal"
-    document.getElementById("instrucao").innerText="AGORA CLIQUE NA VOGAL!"
-    return
-  }
+}
 
-  if(etapa=="vogal"){
-    if(!vogais.includes(letra)) return
-
-    let silabaFormada=consoanteEscolhida+letra
-    let registro=silabas.find(s=>s[0]==silabaFormada)
-
-    if(registro){
-      document.getElementById("resultado").innerText=silabaFormada
-      document.getElementById("palavra").innerText=registro[1]
-      falar(silabaFormada)
-      etapa="fim"
-      document.getElementById("btnProxima").style.display="inline"
-    }else{
-      falar("Essa sílaba não está na lista")
-      resetar()
+function clicar(letra){
+    if(!clicouConsoante){
+        // ERRO → clicou vogal primeiro
+        if(letra===vogal){
+            falar("Vamos tentar novamente. Clique primeiro na consoante.");
+            alert("VAMOS TENTAR NOVAMENTE?\nCLIQUE PRIMEIRO NA CONSOANTE");
+            novaRodada();
+        }
+        // ACERTO → clicou consoante
+        else{
+            clicouConsoante=true;
+            falar(consoante);
+            document.getElementById("instrucao").innerHTML="AGORA CLIQUE NA VOGAL";
+        }
     }
-  }
+    else{
+        // ERRO → clicou consoante de novo
+        if(letra===consoante){
+            falar("Clique na vogal.");
+            alert("AGORA CLIQUE NA VOGAL");
+        }
+        // ACERTO FINAL 🎉
+        else{
+            let silaba = consoante+vogal;
+            document.getElementById("resultado").innerHTML = silaba;
+            document.getElementById("palavra").innerHTML = palavraAtual;
+
+            falar(silaba + " de " + palavraAtual);
+
+            document.getElementById("proximo").style.display="inline";
+        }
+    }
 }
 
-function proxima(){
-  atual++
-  if(atual>=silabas.length) atual=0
-  resetar()
-}
+btn1.onclick = () => clicar(btn1.innerHTML);
+btn2.onclick = () => clicar(btn2.innerHTML);
 
-function resetar(){
-  etapa="consoante"
-  consoanteEscolhida=""
-  document.getElementById("instrucao").innerText="CLIQUE NA CONSOANTE!"
-  document.getElementById("resultado").innerText=""
-  document.getElementById("palavra").innerText=""
-  document.getElementById("btnProxima").style.display="none"
-}
-
-criarCaixas()
+novaRodada();
 </script>
 
 </body>
