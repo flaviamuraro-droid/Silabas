@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Formar Sílabas</title>
+
+<style>
+body{
+  font-family: Arial, sans-serif;
+  text-align:center;
+  background:#f0f8ff;
+}
+
+h1{
+  font-size:40px;
+}
+
+#instrucao{
+  font-size:38px;
+  font-weight:bold;
+  margin:20px;
+  color:#ff6600;
+}
+
+.grade{
+  display:grid;
+  grid-template-columns: repeat(5, 120px);
+  justify-content:center;
+  gap:20px;
+  margin-top:20px;
+}
+
+.caixa{
+  width:120px;
+  height:120px;
+  border-radius:20px;
+  background:#ffffff;
+  border:4px solid #333;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:60px;   /* AQUI fica o tamanho das letras */
+  font-weight:bold;
+  cursor:pointer;
+}
+
+#resultado{
+  font-size:70px;
+  margin-top:20px;
+}
+
+#palavra{
+  font-size:35px;
+  margin-top:10px;
+}
+
+#btnProxima{
+  margin-top:20px;
+  font-size:28px;
+  padding:10px 25px;
+  display:none;
+}
+</style>
+</head>
+
+<body>
+
+<h1>VAMOS FORMAR SÍLABAS!</h1>
+<div id="instrucao">CLIQUE NA CONSOANTE!</div>
+
+<div class="grade" id="consoantes"></div>
+<hr>
+<div class="grade" id="vogais"></div>
+
+<div id="resultado"></div>
+<div id="palavra"></div>
+<button id="btnProxima" onclick="proxima()">PRÓXIMA SÍLABA</button>
+
+<script>
+const vogais=["A","E","I","O","U"]
+
+const silabas=[
+["BA","BANANA"],["BE","BETERRABA"],["BI","BISCOITO"],["BO","BOLO"],["BU","BURRITO"],
+["CA","CAMARÃO"],["CE","CEBOLA"],["CO","COGUMELO"],["CU","CUSCUZ"],
+["DA","DAMASCO"],["DO","DOCE"],
+["FA","FAROFA"],["FE","FEIJÃO"],["FI","FIGO"],["FO","FOGÃO"],
+["GA","GALINHA"],["GE","GELO"],["GO","GOIABA"],
+["JA","JACA"],["JI","JILÓ"],
+["LA","LARANJA"],["LE","LEITE"],["LI","LIMÃO"],["LU","LULA"],
+["MA","MACARRÃO"],["ME","MEL"],["MI","MIOJO"],["MO","MOLHO"],
+["PA","PAÇOCA"],["PE","PEPINO"],["PI","PIPOCA"],["PO","PORCO"],["PU","PURÊ"],
+["RA","RABANETE"],["RI","RICOTA"],["RO","ROMÃ"],
+["SA","SALADA"],["SO","SOPA"],
+["TA","TABULE"]
+]
+
+let atual=0
+let etapa="consoante"
+let consoanteEscolhida=""
+
+function falar(texto){
+  let msg=new SpeechSynthesisUtterance(texto)
+  msg.lang="pt-BR"
+  msg.rate=0.8
+  speechSynthesis.speak(msg)
+}
+
+function criarCaixas(){
+  const conDiv=document.getElementById("consoantes")
+  const vogDiv=document.getElementById("vogais")
+
+  const consoantes=[...new Set(silabas.map(s=>s[0][0]))]
+
+  consoantes.forEach(c=>{
+    let d=document.createElement("div")
+    d.className="caixa"
+    d.innerText=c
+    d.onclick=()=>clicarLetra(c)
+    conDiv.appendChild(d)
+  })
+
+  vogais.forEach(v=>{
+    let d=document.createElement("div")
+    d.className="caixa"
+    d.innerText=v
+    d.onclick=()=>clicarLetra(v)
+    vogDiv.appendChild(d)
+  })
+}
+
+function clicarLetra(letra){
+
+  if(etapa=="consoante"){
+    if(vogais.includes(letra)){
+      falar("Vamos tentar novamente. Clique primeiro na consoante")
+      return
+    }
+    consoanteEscolhida=letra
+    etapa="vogal"
+    document.getElementById("instrucao").innerText="AGORA CLIQUE NA VOGAL!"
+    return
+  }
+
+  if(etapa=="vogal"){
+    if(!vogais.includes(letra)) return
+
+    let silabaFormada=consoanteEscolhida+letra
+    let registro=silabas.find(s=>s[0]==silabaFormada)
+
+    if(registro){
+      document.getElementById("resultado").innerText=silabaFormada
+      document.getElementById("palavra").innerText=registro[1]
+      falar(silabaFormada)
+      etapa="fim"
+      document.getElementById("btnProxima").style.display="inline"
+    }else{
+      falar("Essa sílaba não está na lista")
+      resetar()
+    }
+  }
+}
+
+function proxima(){
+  atual++
+  if(atual>=silabas.length) atual=0
+  resetar()
+}
+
+function resetar(){
+  etapa="consoante"
+  consoanteEscolhida=""
+  document.getElementById("instrucao").innerText="CLIQUE NA CONSOANTE!"
+  document.getElementById("resultado").innerText=""
+  document.getElementById("palavra").innerText=""
+  document.getElementById("btnProxima").style.display="none"
+}
+
+criarCaixas()
+</script>
+
+</body>
+</html>
