@@ -4,7 +4,7 @@ import time
 
 st.set_page_config(layout="wide")
 
-# ---------- ESTILO (BOTÕES GIGANTES) ----------
+# ---------- ESTILO BOTÕES GIGANTES ----------
 st.markdown("""
 <style>
 div.stButton > button {
@@ -37,57 +37,79 @@ silabas = {
 "TA":"TABULE"
 }
 
-# ---------- SORTEAR NOVA SÍLABA ----------
-if "silaba_atual" not in st.session_state:
+vogais = ["A","E","I","O","U"]
+
+# ---------- ESTADOS ----------
+if "fase" not in st.session_state:
+    st.session_state.fase = "consoante"
     st.session_state.silaba_atual = random.choice(list(silabas.keys()))
-    st.session_state.ordem = []
 
 silaba = st.session_state.silaba_atual
 palavra = silabas[silaba]
-
 consoante = silaba[0]
 vogal = silaba[1]
 
 # ---------- TÍTULO ----------
-st.title("🍎 VAMOS FORMAR SÍLABAS!")
-
-st.header(f"QUAL A PRIMEIRA LETRA DE:")
-st.header(f"🍽️ {palavra} ?")
+st.title("VAMOS FORMAR SÍLABAS!")
+st.write("### CLIQUE PRIMEIRO NA CONSOANTE")
 
 st.write("")
 st.write("")
 
-# ---------- EMBARALHAR POSIÇÃO ----------
-letras = [consoante, vogal]
-random.shuffle(letras)
+# ---------- FASE 1: ESCOLHER CONSOANTE ----------
+if st.session_state.fase == "consoante":
 
-col1, col2 = st.columns(2)
+    letras = [consoante, vogal]
+    random.shuffle(letras)
 
-with col1:
-    if st.button(letras[0]):
-        st.session_state.ordem.append(letras[0])
+    col1, col2 = st.columns(2)
 
-with col2:
-    if st.button(letras[1]):
-        st.session_state.ordem.append(letras[1])
+    with col1:
+        if st.button(letras[0]):
+            clique = letras[0]
 
-# ---------- VERIFICAR RESPOSTA ----------
-if len(st.session_state.ordem) == 1:
-    primeira = st.session_state.ordem[0]
+            # ERRO → clicou vogal
+            if clique in vogais:
+                st.error("VAMOS TENTAR NOVAMENTE? CLIQUE PRIMEIRO NA **CONSOANTE**")
+                time.sleep(2)
+                st.rerun()
 
-    # ❌ clicou na vogal primeiro
-    if primeira in ["A","E","I","O","U"]:
-        st.error("😢 CLIQUE PRIMEIRO NA CONSOANTE!")
+            # ACERTO → consoante correta
+            else:
+                st.session_state.fase = "vogal"
+                st.rerun()
 
-        time.sleep(2)
-        st.session_state.ordem = []
-        st.rerun()
+    with col2:
+        if st.button(letras[1]):
+            clique = letras[1]
 
-    # ✅ clicou na consoante primeiro
-    else:
-        st.success("🎉 MUITO BEM!!!")
+            if clique in vogais:
+                st.error("VAMOS TENTAR NOVAMENTE? CLIQUE PRIMEIRO NA **CONSOANTE**")
+                time.sleep(2)
+                st.rerun()
+            else:
+                st.session_state.fase = "vogal"
+                st.rerun()
 
-        time.sleep(2)
-        st.session_state.silaba_atual = random.choice(list(silabas.keys()))
-        st.session_state.ordem = []
-        st.rerun()
+# ---------- FASE 2: ESCOLHER VOGAL ----------
+elif st.session_state.fase == "vogal":
+
+    st.header(f"CONSOANTE ESCOLHIDA: {consoante}")
+    st.write("### AGORA CLIQUE NA VOGAL")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        if st.button(vogal):
+            st.success(f"🎉 {silaba} DE {palavra}")
+            time.sleep(3)
+
+            st.session_state.silaba_atual = random.choice(list(silabas.keys()))
+            st.session_state.fase = "consoante"
+            st.rerun()
+
+    with col2:
+        if st.button(consoante):
+            st.error("ESSA NÃO É A VOGAL 😢")
+            time.sleep(2)
+            st.rerun()
