@@ -6,72 +6,34 @@
 
 <style>
 body{
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: Arial;
     text-align:center;
     background: linear-gradient(180deg,#fff7cc,#ffd6e7);
-    margin:0;
 }
 
-/* TÍTULO */
-h1{
-    font-size:60px;
-    color:#ff4d6d;
-    margin-top:30px;
-}
+h1{ font-size:60px; color:#ff4d6d; }
+#msg{ font-size:38px; font-weight:bold; margin:20px; }
 
-/* FRASE DE INSTRUÇÃO */
-#msg{
-    font-size:38px;
-    font-weight:bold;
-    color:#444;
-    margin:20px;
-}
-
-/* ÁREA DOS BOTÕES */
-.area-botoes{
-    margin-top:40px;
-}
-
-/* BOTÕES DAS LETRAS */
 .letra{
-    width:220px;
-    height:220px;
-    font-size:120px;
-    font-weight:bold;
-    border:none;
-    border-radius:35px;
-    margin:40px;
-    cursor:pointer;
-    transition:0.2s;
+    width:220px;height:220px;font-size:120px;
+    border:none;border-radius:35px;margin:40px;
+    color:white;cursor:pointer;
     box-shadow:0 8px 0 rgba(0,0,0,0.2);
 }
+.consoante{background:#4da6ff;}
+.vogal{background:#ff8fab;}
 
-/* CORES */
-.consoante{ background:#4da6ff; color:white; }
-.vogal{ background:#ff8fab; color:white; }
+.big{font-size:150px;color:#06d6a0;}
 
-.letra:active{
-    transform:translateY(6px);
-    box-shadow:0 2px 0 rgba(0,0,0,0.2);
-}
-
-.big{
-    font-size:150px;
-    color:#06d6a0;
+img{
+    width:300px;
     margin-top:20px;
-}
-
-button{
-    font-size:28px;
-    padding:15px 30px;
-    margin:15px;
-    border:none;
     border-radius:20px;
-    background:#ffd166;
-    cursor:pointer;
 }
-button:hover{ background:#ffca3a; }
-
+button{
+    font-size:28px;padding:15px 30px;margin:15px;
+    border:none;border-radius:20px;background:#ffd166;
+}
 </style>
 </head>
 
@@ -80,17 +42,15 @@ button:hover{ background:#ffca3a; }
 <h1>VAMOS FORMAR SÍLABAS!</h1>
 <div id="msg">CLIQUE NA CONSOANTE</div>
 
-<div class="area-botoes">
-    <button id="btn1" class="letra consoante" onclick="clicar(this.innerText)"></button>
-    <button id="btn2" class="letra vogal" onclick="clicar(this.innerText)"></button>
-</div>
+<button id="btn1" class="letra consoante" onclick="clicar(this.innerText)"></button>
+<button id="btn2" class="letra vogal" onclick="clicar(this.innerText)"></button>
 
 <div id="resultado"></div>
 
 <script>
-const VOGAIS = ["A","E","I","O","U"]
+const VOGAIS=["A","E","I","O","U"]
 
-const SILABAS = [
+const SILABAS=[
 ["BA","BANANA"],["BE","BETERRABA"],["BI","BISCOITO"],["BO","BOLO"],["BU","BURRITO"],
 ["CA","CAMARÃO"],["CE","CEBOLA"],["CO","COGUMELO"],["CU","CUSCUZ"],
 ["DA","DAMASCO"],["DO","DOCE"],
@@ -105,23 +65,26 @@ const SILABAS = [
 ["TA","TABULE"]
 ]
 
-function falar(texto){
-    const msg = new SpeechSynthesisUtterance(texto)
+function limparAcentos(texto){
+    return texto.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase()
+}
+
+function falarSilaba(s){
+    let msg=new SpeechSynthesisUtterance("SÍLABA "+s)
     msg.lang="pt-BR"
-    msg.rate=0.7
+    speechSynthesis.cancel()
     speechSynthesis.speak(msg)
 }
 
 function gerarRodada(){
-    const sorteio=SILABAS[Math.floor(Math.random()*SILABAS.length)]
-    sessionStorage.setItem("silabaAtual",JSON.stringify(sorteio))
+    const s=SILABAS[Math.floor(Math.random()*SILABAS.length)]
+    sessionStorage.setItem("silabaAtual",JSON.stringify(s))
     sessionStorage.setItem("estado","consoante")
 }
-
 function carregarRodada(){
-    let rodada=sessionStorage.getItem("silabaAtual")
-    if(!rodada){gerarRodada(); rodada=sessionStorage.getItem("silabaAtual")}
-    return JSON.parse(rodada)
+    let r=sessionStorage.getItem("silabaAtual")
+    if(!r){gerarRodada(); r=sessionStorage.getItem("silabaAtual")}
+    return JSON.parse(r)
 }
 
 let estado=sessionStorage.getItem("estado")||"consoante"
@@ -132,35 +95,37 @@ const palavra=rodada[1]
 const CONSOANTE=silaba[0]
 const VOGAL=silaba[1]
 
-document.getElementById("btn1").innerText=CONSOANTE
-document.getElementById("btn2").innerText=VOGAL
+btn1.innerText=CONSOANTE
+btn2.innerText=VOGAL
 
 function clicar(letra){
     const msg=document.getElementById("msg")
 
     if(estado==="consoante"){
         if(VOGAIS.includes(letra)){
-            msg.innerHTML="VAMOS TENTAR NOVAMENTE?<br>CLIQUE PRIMEIRO NA <b>CONSOANTE</b>"
-            falar("Tente novamente")
+            msg.innerHTML="TENTE NOVAMENTE!<br>CLIQUE NA <b>CONSOANTE</b>"
             return
         }
         estado="vogal"
         sessionStorage.setItem("estado","vogal")
         msg.innerHTML="AGORA CLIQUE NA VOGAL!"
-        falar(CONSOANTE)
         return
     }
 
     if(estado==="vogal"){
         if(!VOGAIS.includes(letra)) return
 
-        document.getElementById("resultado").innerHTML=
+        let nomeImagem=limparAcentos(palavra)
+
+        resultado.innerHTML=
         `<div class="big">${silaba}</div>
          <h2>${palavra}</h2>
-         <button onclick="falar('${silaba}')">🔊 OUVIR SÍLABA</button>
+         <img src="imagens/${nomeImagem}.png">
+         <br>
+         <button onclick="falarSilaba('${silaba}')">🔊 OUVIR SÍLABA</button>
          <button onclick="proxima()">PRÓXIMA SÍLABA</button>`
 
-        falar(silaba)
+        falarSilaba(silaba)
     }
 }
 
