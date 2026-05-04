@@ -10,12 +10,11 @@ body{
     text-align:center;
     background: linear-gradient(180deg,#fff7cc,#ffd6e7);
 }
-
 h1{ font-size:60px; color:#ff4d6d; }
 #msg{ font-size:38px; font-weight:bold; margin:20px; }
 
 .letra{
-    width:220px;height:220px;font-size:120px;
+    width:220px;height:220px;font-size:130px;
     border:none;border-radius:35px;margin:40px;
     color:white;cursor:pointer;
     box-shadow:0 8px 0 rgba(0,0,0,0.2);
@@ -30,6 +29,7 @@ img{
     margin-top:20px;
     border-radius:20px;
 }
+
 button{
     font-size:28px;padding:15px 30px;margin:15px;
     border:none;border-radius:20px;background:#ffd166;
@@ -69,13 +69,24 @@ function limparAcentos(texto){
     return texto.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase()
 }
 
-function falarSilaba(s){
-    let msg=new SpeechSynthesisUtterance("SÍLABA "+s)
-    msg.lang="pt-BR"
+/* 🔊 ÁUDIO CORRIGIDO DEFINITIVO */
+function falarSilaba(){
+    const rodada = JSON.parse(sessionStorage.getItem("silabaAtual"))
+    const silaba = rodada[0]
+    const palavra = rodada[1]
+
+    const texto = silaba + " de " + palavra
+
+    const msg = new SpeechSynthesisUtterance(texto)
+    msg.lang = "pt-BR"
+    msg.rate = 0.75
+    msg.pitch = 1.1
+
     speechSynthesis.cancel()
     speechSynthesis.speak(msg)
 }
 
+/* 🎲 RODADA */
 function gerarRodada(){
     const s=SILABAS[Math.floor(Math.random()*SILABAS.length)]
     sessionStorage.setItem("silabaAtual",JSON.stringify(s))
@@ -98,6 +109,7 @@ const VOGAL=silaba[1]
 btn1.innerText=CONSOANTE
 btn2.innerText=VOGAL
 
+/* 🎮 CLIQUES */
 function clicar(letra){
     const msg=document.getElementById("msg")
 
@@ -122,10 +134,10 @@ function clicar(letra){
          <h2>${palavra}</h2>
          <img src="imagens/${nomeImagem}.png">
          <br>
-         <button onclick="falarSilaba('${silaba}')">🔊 OUVIR SÍLABA</button>
+         <button onclick="falarSilaba()">🔊 OUVIR SÍLABA</button>
          <button onclick="proxima()">PRÓXIMA SÍLABA</button>`
 
-        falarSilaba(silaba)
+        falarSilaba()
     }
 }
 
