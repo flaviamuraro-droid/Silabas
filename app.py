@@ -8,39 +8,39 @@ st.set_page_config(layout="wide")
 def tocar_audio(texto):
     frase = texto.upper()
     tts = gTTS(text=frase, lang="pt-br", slow=True)
-    arquivo = "som.mp3"
-    tts.save(arquivo)
-    audio_file = open(arquivo, "rb")
-    audio_bytes = audio_file.read()
-    st.audio(audio_bytes, format="audio/mp3")
+    tts.save("som.mp3")
+    audio_file = open("som.mp3", "rb")
+    st.audio(audio_file.read(), format="audio/mp3")
 
-# ---------- ESTILO VISUAL ----------
+# ---------- CSS ----------
 st.markdown("""
 <style>
 
-/* BOTÕES GIGANTES */
+/* BOTÕES NORMAIS (som e próxima) */
 div.stButton > button {
-    height: 220px !important;
-    width: 220px !important;
-    border-radius: 30px !important;
+    font-size:18px !important;
+    height:50px;
 }
 
-/* TEXTO DENTRO DO BOTÃO (AUMENTA A LETRA!) */
-div.stButton > button p {
-    font-size: 120px !important;
-    font-weight: 900 !important;
+/* BOTÕES DAS LETRAS (classe especial) */
+.letra button {
+    height:220px !important;
+    width:220px !important;
+    border-radius:30px !important;
 }
 
-/* SÍLABA FINAL */
+.letra button p {
+    font-size:120px !important;
+    font-weight:900 !important;
+}
+
 .big {
     font-size:150px;
     text-align:center;
     font-weight:bold;
 }
 
-.center {
-    text-align:center;
-}
+.center { text-align:center; }
 
 </style>
 """, unsafe_allow_html=True)
@@ -73,12 +73,10 @@ palavra = silabas[silaba]
 consoante = silaba[0]
 vogal = silaba[1]
 
-# ---------- TÍTULO ----------
 st.title("VAMOS FORMAR SÍLABAS!")
 st.write("### CLIQUE PRIMEIRO NA CONSOANTE")
-st.write("")
 
-# ---------- FASE 1: ESCOLHER CONSOANTE ----------
+# ---------- FASE CONSOANTE ----------
 if st.session_state.fase == "consoante":
 
     letras = [consoante, vogal]
@@ -87,24 +85,28 @@ if st.session_state.fase == "consoante":
     col1, col2 = st.columns(2)
 
     with col1:
-        if st.button(letras[0]):
+        st.markdown('<div class="letra">', unsafe_allow_html=True)
+        if st.button(letras[0], key="l1"):
             if letras[0] in vogais:
                 st.error("VAMOS TENTAR NOVAMENTE? CLIQUE PRIMEIRO NA **CONSOANTE**")
                 st.rerun()
             else:
                 st.session_state.fase = "vogal"
                 st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
     with col2:
-        if st.button(letras[1]):
+        st.markdown('<div class="letra">', unsafe_allow_html=True)
+        if st.button(letras[1], key="l2"):
             if letras[1] in vogais:
                 st.error("VAMOS TENTAR NOVAMENTE? CLIQUE PRIMEIRO NA **CONSOANTE**")
                 st.rerun()
             else:
                 st.session_state.fase = "vogal"
                 st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
-# ---------- FASE 2: ESCOLHER VOGAL ----------
+# ---------- FASE VOGAL ----------
 elif st.session_state.fase == "vogal":
 
     st.header(f"CONSOANTE ESCOLHIDA: {consoante}")
@@ -113,15 +115,19 @@ elif st.session_state.fase == "vogal":
     col1, col2 = st.columns(2)
 
     with col1:
-        if st.button(vogal):
+        st.markdown('<div class="letra">', unsafe_allow_html=True)
+        if st.button(vogal, key="v1"):
             st.session_state.fase = "acertou"
             st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
     with col2:
-        if st.button(consoante):
+        st.markdown('<div class="letra">', unsafe_allow_html=True)
+        if st.button(consoante, key="v2"):
             st.error("ESSA NÃO É A VOGAL 😢")
+        st.markdown('</div>', unsafe_allow_html=True)
 
-# ---------- FASE 3: TELA DE ACERTO ----------
+# ---------- FASE ACERTO ----------
 elif st.session_state.fase == "acertou":
 
     st.balloons()
@@ -130,9 +136,6 @@ elif st.session_state.fase == "acertou":
 
     if st.button("🔊 OUVIR NOVAMENTE"):
         tocar_audio(f"{silaba} DE {palavra}")
-
-    st.write("")
-    st.write("")
 
     if st.button("➡️ PRÓXIMA SÍLABA"):
         st.session_state.silaba_atual = random.choice(list(silabas.keys()))
