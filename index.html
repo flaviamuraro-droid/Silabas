@@ -2,68 +2,95 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>Formar Sílabas</title>
+<title>JOGO DAS SÍLABAS</title>
 
 <style>
 body{
-    font-family: Arial;
+    font-family: Arial, Helvetica, sans-serif;
     text-align:center;
-    background:#FFF8DC;
+    background: linear-gradient(180deg,#fff7cc,#ffd6e7);
+    margin:0;
 }
 
+/* TÍTULO */
 h1{
-    font-size:55px;
+    font-size:60px;
+    color:#ff4d6d;
+    margin-top:30px;
 }
 
-#instrucao{
-    font-size:45px;
+/* FRASE DE INSTRUÇÃO */
+#msg{
+    font-size:38px;
     font-weight:bold;
-    margin:30px;
+    color:#444;
+    margin:20px;
 }
 
-.botao{
-    font-size:120px;
+/* ÁREA DOS BOTÕES */
+.area-botoes{
+    margin-top:40px;
+}
+
+/* BOTÕES DAS LETRAS */
+.letra{
     width:220px;
     height:220px;
-    margin:20px;
-    border-radius:30px;
-}
-
-#resultado{
     font-size:120px;
-    margin-top:30px;
     font-weight:bold;
+    border:none;
+    border-radius:35px;
+    margin:40px;
+    cursor:pointer;
+    transition:0.2s;
+    box-shadow:0 8px 0 rgba(0,0,0,0.2);
 }
 
-#palavra{
-    font-size:60px;
-    margin:20px;
+/* CORES */
+.consoante{ background:#4da6ff; color:white; }
+.vogal{ background:#ff8fab; color:white; }
+
+.letra:active{
+    transform:translateY(6px);
+    box-shadow:0 2px 0 rgba(0,0,0,0.2);
 }
 
-#proximo{
-    font-size:40px;
-    padding:20px;
-    display:none;
+.big{
+    font-size:150px;
+    color:#06d6a0;
+    margin-top:20px;
 }
+
+button{
+    font-size:28px;
+    padding:15px 30px;
+    margin:15px;
+    border:none;
+    border-radius:20px;
+    background:#ffd166;
+    cursor:pointer;
+}
+button:hover{ background:#ffca3a; }
+
 </style>
 </head>
 
 <body>
 
 <h1>VAMOS FORMAR SÍLABAS!</h1>
-<div id="instrucao">CLIQUE NA CONSOANTE</div>
+<div id="msg">CLIQUE NA CONSOANTE</div>
 
-<button id="btn1" class="botao"></button>
-<button id="btn2" class="botao"></button>
+<div class="area-botoes">
+    <button id="btn1" class="letra consoante" onclick="clicar(this.innerText)"></button>
+    <button id="btn2" class="letra vogal" onclick="clicar(this.innerText)"></button>
+</div>
 
 <div id="resultado"></div>
-<div id="palavra"></div>
-
-<button id="proximo" onclick="novaRodada()">PRÓXIMA SÍLABA</button>
 
 <script>
-// LISTA DE SÍLABAS + PALAVRAS
-const silabas = [
+const VOGAIS = ["A","E","I","O","U"]
+
+const SILABAS = [
 ["BA","BANANA"],["BE","BETERRABA"],["BI","BISCOITO"],["BO","BOLO"],["BU","BURRITO"],
 ["CA","CAMARÃO"],["CE","CEBOLA"],["CO","COGUMELO"],["CU","CUSCUZ"],
 ["DA","DAMASCO"],["DO","DOCE"],
@@ -76,84 +103,71 @@ const silabas = [
 ["RA","RABANETE"],["RI","RICOTA"],["RO","ROMÃ"],
 ["SA","SALADA"],["SO","SOPA"],
 ["TA","TABULE"]
-];
-
-let consoante;
-let vogal;
-let silabaAtual;
-let palavraAtual;
-let clicouConsoante=false;
+]
 
 function falar(texto){
-    let fala=new SpeechSynthesisUtterance(texto);
-    fala.lang="pt-BR";
-    speechSynthesis.speak(fala);
+    const msg = new SpeechSynthesisUtterance(texto)
+    msg.lang="pt-BR"
+    msg.rate=0.7
+    speechSynthesis.speak(msg)
 }
 
-function novaRodada(){
-    document.getElementById("resultado").innerHTML="";
-    document.getElementById("palavra").innerHTML="";
-    document.getElementById("proximo").style.display="none";
-    document.getElementById("instrucao").innerHTML="CLIQUE NA CONSOANTE";
-
-    clicouConsoante=false;
-
-    // SORTEIA UMA SÍLABA
-    let sorteio = silabas[Math.floor(Math.random()*silabas.length)];
-    silabaAtual = sorteio[0];
-    palavraAtual = sorteio[1];
-
-    consoante = silabaAtual[0];
-    vogal = silabaAtual[1];
-
-    // EMBARALHA POSIÇÃO DOS BOTÕES
-    if(Math.random() < 0.5){
-        btn1.innerHTML = consoante;
-        btn2.innerHTML = vogal;
-    } else {
-        btn1.innerHTML = vogal;
-        btn2.innerHTML = consoante;
-    }
+function gerarRodada(){
+    const sorteio=SILABAS[Math.floor(Math.random()*SILABAS.length)]
+    sessionStorage.setItem("silabaAtual",JSON.stringify(sorteio))
+    sessionStorage.setItem("estado","consoante")
 }
+
+function carregarRodada(){
+    let rodada=sessionStorage.getItem("silabaAtual")
+    if(!rodada){gerarRodada(); rodada=sessionStorage.getItem("silabaAtual")}
+    return JSON.parse(rodada)
+}
+
+let estado=sessionStorage.getItem("estado")||"consoante"
+let rodada=carregarRodada()
+
+const silaba=rodada[0]
+const palavra=rodada[1]
+const CONSOANTE=silaba[0]
+const VOGAL=silaba[1]
+
+document.getElementById("btn1").innerText=CONSOANTE
+document.getElementById("btn2").innerText=VOGAL
 
 function clicar(letra){
-    if(!clicouConsoante){
-        // ERRO → clicou vogal primeiro
-        if(letra===vogal){
-            falar("Vamos tentar novamente. Clique primeiro na consoante.");
-            alert("VAMOS TENTAR NOVAMENTE?\nCLIQUE PRIMEIRO NA CONSOANTE");
-            novaRodada();
+    const msg=document.getElementById("msg")
+
+    if(estado==="consoante"){
+        if(VOGAIS.includes(letra)){
+            msg.innerHTML="VAMOS TENTAR NOVAMENTE?<br>CLIQUE PRIMEIRO NA <b>CONSOANTE</b>"
+            falar("Tente novamente")
+            return
         }
-        // ACERTO → clicou consoante
-        else{
-            clicouConsoante=true;
-            falar(consoante);
-            document.getElementById("instrucao").innerHTML="AGORA CLIQUE NA VOGAL";
-        }
+        estado="vogal"
+        sessionStorage.setItem("estado","vogal")
+        msg.innerHTML="AGORA CLIQUE NA VOGAL!"
+        falar(CONSOANTE)
+        return
     }
-    else{
-        // ERRO → clicou consoante de novo
-        if(letra===consoante){
-            falar("Clique na vogal.");
-            alert("AGORA CLIQUE NA VOGAL");
-        }
-        // ACERTO FINAL 🎉
-        else{
-            let silaba = consoante+vogal;
-            document.getElementById("resultado").innerHTML = silaba;
-            document.getElementById("palavra").innerHTML = palavraAtual;
 
-            falar(silaba + " de " + palavraAtual);
+    if(estado==="vogal"){
+        if(!VOGAIS.includes(letra)) return
 
-            document.getElementById("proximo").style.display="inline";
-        }
+        document.getElementById("resultado").innerHTML=
+        `<div class="big">${silaba}</div>
+         <h2>${palavra}</h2>
+         <button onclick="falar('${silaba}')">🔊 OUVIR SÍLABA</button>
+         <button onclick="proxima()">PRÓXIMA SÍLABA</button>`
+
+        falar(silaba)
     }
 }
 
-btn1.onclick = () => clicar(btn1.innerHTML);
-btn2.onclick = () => clicar(btn2.innerHTML);
-
-novaRodada();
+function proxima(){
+    sessionStorage.clear()
+    location.reload()
+}
 </script>
 
 </body>
