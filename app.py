@@ -1,8 +1,20 @@
 import streamlit as st
 import random
 import time
+from gtts import gTTS
+import base64
+from pathlib import Path
 
 st.set_page_config(layout="wide")
+
+# ---------- FUNÇÃO DE SOM ----------
+def tocar_audio(texto):
+    tts = gTTS(text=texto, lang="pt-br")
+    arquivo = "som.mp3"
+    tts.save(arquivo)
+    audio_file = open(arquivo, "rb")
+    audio_bytes = audio_file.read()
+    st.audio(audio_bytes, format="audio/mp3", autoplay=True)
 
 # ---------- ESTILO BOTÕES GIGANTES ----------
 st.markdown("""
@@ -14,7 +26,7 @@ div.stButton > button {
     font-weight: bold;
     border-radius: 25px;
 }
-h1, h2, h3, p {
+h1, h2, h3 {
     text-align: center;
     font-weight: bold;
 }
@@ -52,11 +64,9 @@ vogal = silaba[1]
 # ---------- TÍTULO ----------
 st.title("VAMOS FORMAR SÍLABAS!")
 st.write("### CLIQUE PRIMEIRO NA CONSOANTE")
-
-st.write("")
 st.write("")
 
-# ---------- FASE 1: ESCOLHER CONSOANTE ----------
+# ---------- FASE 1 ----------
 if st.session_state.fase == "consoante":
 
     letras = [consoante, vogal]
@@ -66,24 +76,17 @@ if st.session_state.fase == "consoante":
 
     with col1:
         if st.button(letras[0]):
-            clique = letras[0]
-
-            # ERRO → clicou vogal
-            if clique in vogais:
+            if letras[0] in vogais:
                 st.error("VAMOS TENTAR NOVAMENTE? CLIQUE PRIMEIRO NA **CONSOANTE**")
                 time.sleep(2)
                 st.rerun()
-
-            # ACERTO → consoante correta
             else:
                 st.session_state.fase = "vogal"
                 st.rerun()
 
     with col2:
         if st.button(letras[1]):
-            clique = letras[1]
-
-            if clique in vogais:
+            if letras[1] in vogais:
                 st.error("VAMOS TENTAR NOVAMENTE? CLIQUE PRIMEIRO NA **CONSOANTE**")
                 time.sleep(2)
                 st.rerun()
@@ -91,7 +94,7 @@ if st.session_state.fase == "consoante":
                 st.session_state.fase = "vogal"
                 st.rerun()
 
-# ---------- FASE 2: ESCOLHER VOGAL ----------
+# ---------- FASE 2 ----------
 elif st.session_state.fase == "vogal":
 
     st.header(f"CONSOANTE ESCOLHIDA: {consoante}")
@@ -99,15 +102,22 @@ elif st.session_state.fase == "vogal":
 
     col1, col2 = st.columns(2)
 
+    # CLICOU CERTO → MOSTRA SÍLABA + SOM
     with col1:
         if st.button(vogal):
-            st.success(f"🎉 {silaba} DE {palavra}")
-            time.sleep(3)
+            st.balloons()
+
+            st.markdown(f"<h1 style='font-size:120px'>{silaba}</h1>", unsafe_allow_html=True)
+            st.markdown(f"<h2> {silaba} DE {palavra} </h2>", unsafe_allow_html=True)
+
+            tocar_audio(silaba)        # 🔊 SOM DA SÍLABA
+            time.sleep(4)
 
             st.session_state.silaba_atual = random.choice(list(silabas.keys()))
             st.session_state.fase = "consoante"
             st.rerun()
 
+    # CLICOU ERRADO
     with col2:
         if st.button(consoante):
             st.error("ESSA NÃO É A VOGAL 😢")
