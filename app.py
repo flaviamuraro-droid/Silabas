@@ -1,35 +1,47 @@
 import streamlit as st
 import random
-import time
 from gtts import gTTS
-import base64
-from pathlib import Path
 
 st.set_page_config(layout="wide")
 
-# ---------- FUNÇÃO DE SOM ----------
+# ---------- FUNÇÃO SOM ----------
 def tocar_audio(texto):
-    tts = gTTS(text=texto, lang="pt-br")
+    frase = texto.upper()
+    tts = gTTS(text=frase, lang="pt-br", slow=True)
     arquivo = "som.mp3"
     tts.save(arquivo)
     audio_file = open(arquivo, "rb")
     audio_bytes = audio_file.read()
-    st.audio(audio_bytes, format="audio/mp3", autoplay=True)
+    st.audio(audio_bytes, format="audio/mp3")
 
-# ---------- ESTILO BOTÕES GIGANTES ----------
+# ---------- ESTILO VISUAL ----------
 st.markdown("""
 <style>
+
+/* BOTÕES GIGANTES */
 div.stButton > button {
-    height: 200px;
-    width: 200px;
-    font-size: 60px !important;
-    font-weight: bold;
-    border-radius: 25px;
+    height: 220px !important;
+    width: 220px !important;
+    border-radius: 30px !important;
 }
-h1, h2, h3 {
-    text-align: center;
-    font-weight: bold;
+
+/* TEXTO DENTRO DO BOTÃO (AUMENTA A LETRA!) */
+div.stButton > button p {
+    font-size: 120px !important;
+    font-weight: 900 !important;
 }
+
+/* SÍLABA FINAL */
+.big {
+    font-size:150px;
+    text-align:center;
+    font-weight:bold;
+}
+
+.center {
+    text-align:center;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -66,7 +78,7 @@ st.title("VAMOS FORMAR SÍLABAS!")
 st.write("### CLIQUE PRIMEIRO NA CONSOANTE")
 st.write("")
 
-# ---------- FASE 1 ----------
+# ---------- FASE 1: ESCOLHER CONSOANTE ----------
 if st.session_state.fase == "consoante":
 
     letras = [consoante, vogal]
@@ -78,7 +90,6 @@ if st.session_state.fase == "consoante":
         if st.button(letras[0]):
             if letras[0] in vogais:
                 st.error("VAMOS TENTAR NOVAMENTE? CLIQUE PRIMEIRO NA **CONSOANTE**")
-                time.sleep(2)
                 st.rerun()
             else:
                 st.session_state.fase = "vogal"
@@ -88,13 +99,12 @@ if st.session_state.fase == "consoante":
         if st.button(letras[1]):
             if letras[1] in vogais:
                 st.error("VAMOS TENTAR NOVAMENTE? CLIQUE PRIMEIRO NA **CONSOANTE**")
-                time.sleep(2)
                 st.rerun()
             else:
                 st.session_state.fase = "vogal"
                 st.rerun()
 
-# ---------- FASE 2 ----------
+# ---------- FASE 2: ESCOLHER VOGAL ----------
 elif st.session_state.fase == "vogal":
 
     st.header(f"CONSOANTE ESCOLHIDA: {consoante}")
@@ -102,24 +112,29 @@ elif st.session_state.fase == "vogal":
 
     col1, col2 = st.columns(2)
 
-    # CLICOU CERTO → MOSTRA SÍLABA + SOM
     with col1:
         if st.button(vogal):
-            st.balloons()
-
-            st.markdown(f"<h1 style='font-size:120px'>{silaba}</h1>", unsafe_allow_html=True)
-            st.markdown(f"<h2> {silaba} DE {palavra} </h2>", unsafe_allow_html=True)
-
-            tocar_audio(silaba)        # 🔊 SOM DA SÍLABA
-            time.sleep(4)
-
-            st.session_state.silaba_atual = random.choice(list(silabas.keys()))
-            st.session_state.fase = "consoante"
+            st.session_state.fase = "acertou"
             st.rerun()
 
-    # CLICOU ERRADO
     with col2:
         if st.button(consoante):
             st.error("ESSA NÃO É A VOGAL 😢")
-            time.sleep(2)
-            st.rerun()
+
+# ---------- FASE 3: TELA DE ACERTO ----------
+elif st.session_state.fase == "acertou":
+
+    st.balloons()
+    st.markdown(f"<div class='big'>{silaba}</div>", unsafe_allow_html=True)
+    st.markdown(f"<h2 class='center'>{silaba} DE {palavra}</h2>", unsafe_allow_html=True)
+
+    if st.button("🔊 OUVIR NOVAMENTE"):
+        tocar_audio(f"{silaba} DE {palavra}")
+
+    st.write("")
+    st.write("")
+
+    if st.button("➡️ PRÓXIMA SÍLABA"):
+        st.session_state.silaba_atual = random.choice(list(silabas.keys()))
+        st.session_state.fase = "consoante"
+        st.rerun()
